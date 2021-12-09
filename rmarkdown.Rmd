@@ -1,0 +1,1966 @@
+---
+title: "206 MEGA DOC - LABS"
+author: "Lucas Boyd"
+date: "11/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Attach packages:
+library(tidyverse)
+library(janitor)
+library(here)
+```
+# LAB1
+## Lab 1 objectives
+
+By the end of Lab 1, you should be able to...
+
+- Create a new .Rproj and add files to working directory
+- Attach packages with library()
+- Read in a CSV with readr::read_csv()
+- Explore data a little bit
+- Do some basic wrangling with dplyr (`select()`, `filter()`, `mutate()`, `group_by()`, `summarize()`)
+- Use the pipe operator (`%>%`)
+- Create basic graphs with `ggplot2`
+
+**Setup:** Make a directory (folder) on our computer that you'll put all of your ESM 206 labs in. Maybe Documents > Bren courses > esm_206 > labs
+
+## Part 1: Hello, RStudio
+
+## Part 2: Hello, RMarkdown
+
+Create a new RMarkdown document. You can save this directly in your labs folder.
+
+Some basics of RMarkdown: 
+
+- Bulleted lists
+- With a dash then a space to start the line
+- Make sure to have a blank line before it.
+  - You can have nested lists
+  
+1. Numbered lists
+2. Also work
+
+Create different header levels:
+
+## Largest (single pound sign)
+### Get smaller as you add more pound signs
+##### Even smaller with more pound signs...
+
+*Italics* with a single asterisk on each end
+**Bold** with a double asterisk on each end
+
+Or, check out the visual editor!!! 
+
+Knitting: create an html from your .Rmd. 
+
+## Part 3: Hello, data
+
+## Create a new R project and add data 
+
+In RStudio:
+
+- Create a new R project (blue cube) - save in the labs folder you created above
+- Download the mack_creek_verts.csv file from GauchoSpace
+- Copy and paste the mack_creek_verts.csv file into the project folder
+- Within the R project, create a new R Markdown document, deleting everything below the setup code chunk
+- Attach the `tidyverse`, `janitor` and `here` packages (if you don't have janitor and here installed, run `install.packages("janitor")` and `install.packages("here")` in the Console)
+
+**Data citation:** Gregory, S.V. and I. Arismendi. 2020. Aquatic Vertebrate Population Study in Mack Creek, Andrews Experimental Forest, 1987 to present ver 14. Environmental Data Initiative. https://doi.org/10.6073/pasta/7c78d662e847cdbe33584add8f809165
+
+**Metadata:** For information on the Mack Creek Vertebrates data, see metadata [HERE](https://portal.edirepository.org/nis/metadataviewer?packageid=knb-lter-and.4027.14). 
+
+## Read in Mack Creek Vertebrates data
+
+In a new code chunk, use `read_csv()` to read in the mack_creek_verts.csv data as a new stored object 'verts' (**note:** your file path will differ from this! Make sure you use the right path within YOUR project). We use `here()` to point to different files *within our project*. 
+
+```{r}
+verts <- read_csv(here("esm206-f2021-lab1", "mack_creek_verts.csv"))
+```
+
+Make sure to **run** that code, and note that `verts` now appears in the Environment tab. Click on the name of the object in the Environment to run the View() function, which will bring up `verts` in its own tab to take a look. 
+
+## Do some basic exploring
+
+Let's take a look at the data we just read in. We'll do this in the Console, because we don't care about having a history of this initial exploration.
+
+- `head()`: Return the first 6 lines
+- `tail()`: Return the last 6 lines
+- `names()`: Return the column headers
+- `summary()`: Basic summary of columns
+
+## Clean up column names with janitor::clean_names()
+
+The column names are not particularly coder-friendly (all caps - annoying to work with). There are a number of ways to update column headers, but `janitor::clean_names()` is a really great one that will update them all to lower_snake_case all at once! 
+
+We will also use the pipe operator (`%>%`), which is imported when we attach the tidyverse, for the first time. We can think of the pipe as a way to say "and then..." between sequential bits of code. It allows us to perform sequences of steps in a logical way, instead of using a bunch of nested functions! 
+
+The shortcut to add the pipe is Command + Shift + M.
+
+The code below creates a new object, verts_clean, that starts from verts *and then* applies janitor::clean_names()! 
+
+```{r}
+verts_clean <- verts %>% clean_names()
+```
+
+Run the code, then look at the outcome `verts_clean` to ensure that the column headers are updated. 
+
+## Basic wrangling
+
+We've already done a lot in this session: created a project, dropped data into the project folder, read in data, cleaned column names, and met the pipe operator (%>%). Now, let's add a few more tools to our wrangling toolkit:
+
+- dplyr::select() - choose / exclude columns 
+- dplyr::filter() - create subsets based on conditions
+
+Use `dplyr::select()` to select (or exclude) columns. 
+
+The code below creates a new stored object, `verts_subset`, that starts from verts_clean but only keeps 5 columns: year, section, species, length1, and weight. 
+
+```{r}
+verts_subset <- verts_clean %>% 
+  select(year, section, species, length1, weight)
+```
+
+You can also exclude columns in select() by putting a minus sign in front of the column names. We'll learn other ways to use select() moving forward. 
+
+We can use the filter() function from dplyr to create of data based on conditions that we set. For example, starting from `verts_subset`, let's filter to make several different subsets:  
+
+- Only keep observations from 1988
+- Only keep observations for ONCL 
+- Only keep observations for CC from 1995
+- Only keep observations if length is greater than 90
+
+```{r}
+# A subset containing only observations where year matches 1988
+verts_1988 <- verts_subset %>% 
+  filter(year == 1988)
+
+# A subset containing only observations where species matches ONCL
+verts_oncl <- verts_subset %>% 
+  filter(species == "ONCL")
+
+# A subset keeping observations where section matches "CC" and year matches 1995
+verts_cc_1995 <- verts_subset %>% 
+  filter(section == "CC", year == 1995)
+
+# A subset that only retains observations if length1 is greater than 90
+verts_greater_90 <- verts_subset %>% 
+  filter(length1 > 90)
+
+```
+
+Cool! Now you have a couple tools to start wrangling your data! 
+
+## Piped sequence of functions
+
+Instead of writing out one step at a time, we can pipe together sequences of steps. Make sure that you **check the output of each step** before moving onto the next! 
+
+Let's create a new subset called `verts_piped` following steps:
+
+- Start with verts
+- Convert column names to lower snake case
+- Select only species and weight
+- Filter only include ONCL (species)
+
+In a piped sequence, that looks like this: 
+
+```{r}
+verts_piped <- verts %>% 
+  clean_names() %>% 
+  select(species, weight) %>% 
+  filter(species == "ONCL")
+```
+
+Here is another example that starts with verts, cleans up the column names, selects just 4 columns, then filters to only include ONCL species (cutthroat trout) from the year 1990. 
+
+```{r}
+cutthroat_1990 <- verts %>% 
+  clean_names() %>% 
+  select(year, species, length1, weight) %>% 
+  filter(year == 1990, species == "ONCL")
+```
+
+## Plot it! 
+
+```{r}
+# Plot it! 
+ggplot(data = cutthroat_1990, aes(x = length1, y = weight)) +
+  geom_point(color = "red")
+```
+
+## `dplyr::mutate()`
+
+Use `dplyr::mutate()` to add or transform columns, while keeping existing columns in your data frame. 
+
+Let's say we want to add a column that contains weight (currently in grams) into kilograms. We'll call the new column `weight_kg`. 
+
+```{r}
+verts_wt_kg <- verts %>% 
+  clean_names() %>% 
+  mutate(weight_kg = weight / 1000)
+```
+
+## `dplyr::group_by() %>% summarize()`
+
+Use `group_by() %>% summarize()` to find and report summary statistics by group.
+
+```{r}
+verts_clean %>% 
+  drop_na(species) %>% 
+  group_by(species) %>% 
+  summarize(mean_length = mean(length1, na.rm = TRUE),
+            sd_length = sd(length1, na.rm = TRUE))
+
+# We can also group by multiple variables! 
+verts_clean %>% 
+  drop_na(species) %>% 
+  group_by(species, section) %>% 
+  summarize(mean_length = mean(length1, na.rm = TRUE),
+            sd_length = sd(length1, na.rm = TRUE))
+
+```
+
+## Wrap-up
+
+Congratulations! In Lab 1, you have: 
+
+- Made an R Project (self-contained working directory)
+- Added data
+- Created a new R Markdown document
+- Read in the data
+- Did some basic exploring
+- Some data wrangling basics (select, filter, mutate, group_by + summarize)
+- Learned a few base operations (mean, sd, max, min, n, na.rm = TRUE)
+- Used the pipe operator for sequences of steps
+- Made a ggplot2 graph! 
+
+Save / knit, close your project, and reopen (by double clicking the .Rproj file), and ensure that you can re-run everything. 
+
+YAY reproducibility! 
+
+## END LAB 1
+
+# LAB 2
+
+```{r setup, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+# Attach packages
+library(tidyverse)
+library(janitor)
+library(here)
+library(palmerpenguins)
+```
+
+## SEE https://github.com/allisonhorst/esm206-f2020-labs/tree/main/lab_2
+
+## Lab 2 objectives:
+
+- Project management (more subfolder structure & `here`)
+- Continue meeting R Markdown
+- More data wrangling (filtering, `mutate()`, and summary tables with `group_by` + `summarize`)
+- Customization in `ggplot2`
+
+## Packages required: 
+
+- `tidyverse`
+- `janitor`
+- `here`
+- `palmerpenguins`
+
+### 1. Lab set-up & project management: 
+
+- Create a new R Project (within your ESM 206 labs folder)
+- Add subfolders `data`, `img`, `src`
+- Copy and paste the `ca_ag_2014.csv` file into the project `data` folder
+- In RStudio, create a new RMarkdown doc (.Rmd). Save to the `src` folder
+- In your new R Markdown document, attach the `tidyverse`, `janitor`, `here`, and `palmerpenguins` packages in the setup chunk
+
+## 2. A couple more R Markdown tips 
+
+1. URL
+
+    - Add a functional URL by just copying & pasting it: https://www.ucsb.edu/
+
+    - Or add linked text [like this](https://www.ucsb.edu/).
+
+2. Superscripts / subscripts
+
+    - Superscript text with a ^ on either side: like^this^
+
+    - Subscript text with a ~ on either side: like~this~
+
+3. Add image from a URL
+
+    - Find an image online (for more octocats - the GitHub mascot- visit https://octodex.github.com/)
+
+    - Right click > Copy image location
+
+    - Paste the image location into the parentheses in this format: `![](paste_image_location_here.png)`
+
+For example: 
+
+![](https://octodex.github.com/images/dinotocat.png)
+
+But ask yourself: how does that break? What might be a safer and more robust way to include an image? 
+
+## 3. Read in the data 
+
+Today we'll use information from California crop production from 2014. 
+
+First, open the CSV in Excel or other spreadsheet software (outside of R, open the file & it will open in Excel if you have it). Make sure to take a look at the data after you read them in. **Note:** Your file path will differ from the one below.
+
+```{r}
+# Read in the ca_agriculture.csv file
+ca_ag <- read_csv(here("esm206-f2021-lab2", "ca_ag_2014.csv")) %>% 
+  clean_names()
+```
+
+## 4. More `dplyr::filter()` examples
+
+a. Keep data from counties "Kern" OR "Inyo" OR "Mono"
+
+Use `%in%` to look for multiple acceptable matches. 
+
+```{r}
+ex_a <- ca_ag %>% 
+  filter(county %in% c("Kern", "Inyo", "Mono"))
+```
+
+b. Keep data for all counties EXCEPT Merced
+
+Use `!=` to say "DOES NOT MATCH":
+
+```{r}
+ex_b <- ca_ag %>% 
+  filter(county != "Merced")
+```
+
+**Tip:** Use the `unique()` function to check with distinct groups remain in a variable
+
+c. Keep observations where crop is "GOATS MILK" and county is "Humboldt"
+
+```{r}
+ex_c <- ca_ag %>% 
+  filter(crop_name == "GOATS MILK", county == "Humboldt")
+```
+
+d. Keep observations where crop is "GRAPES WINE" **or** harvest acres is greater than 1,000,000:
+
+```{r}
+ex_d <- ca_ag %>% 
+  filter(crop_name == "GRAPES WINE" | harvest_acres > 1e6)
+```
+
+## 5. `mutate()` to add a new column (or transform an existing one)
+
+We'll use the `mutate()` function in dplyr (part of the tidyverse) to add a new column, or to transform an existing one. 
+
+In `ca_ag`, we have a column for "production" and one for "price per unit". We want a new column containing the value for each observation:
+
+```{r}
+ca_ag_value <- ca_ag %>% 
+  mutate(value_usd = production * price_per_unit)
+```
+
+We can also use `mutate()` to transform existing columns. 
+
+```{r}
+ca_ag_lower <- ca_ag %>% 
+  mutate(crop_name = str_to_lower(crop_name))
+```
+
+
+## 6. `group_by()` + `summarize()` for tables of summary statistics
+
+We often want to find summary statistics (e.g. mean, standard deviation, max, min, etc.) within *groups* for our data. For example, we may want to find the total *value* of crops by *county* for California in 2014. But it would be really tedious to make a different subset for each county, then find those statistics. 
+
+Instead, we will use the powerful combination of `dplyr::group_by()` and `summarize()` to:
+
+- Recognize distinct groups within a variable
+- Apply a function to each *group*
+- Return the outcomes in a nice table
+
+It is awesome. You should plan on using this all the time (if you're an Excel wizard, this is your replacement for pivot tables).
+
+Here's a little example first using the [palmerpenguins](https://allisonhorst.github.io/palmerpenguins/). View the `penguins` data (`View(penguins)`). 
+
+```{r}
+penguin_bill_lengths <- penguins %>% 
+  group_by(species) %>% 
+  summarize(mean_bill_length_mm = mean(bill_length_mm, na.rm = TRUE))
+
+penguin_size_summary <- penguins %>% 
+  group_by(species) %>% 
+  summarize(mean_flipper_length_mm = mean(flipper_length_mm, na.rm = TRUE),
+            mean_body_mass_g = mean(body_mass_g, na.rm = TRUE),
+            sample_size = n())
+
+penguin_size_summary
+```
+
+Now let's try one for our CA ag data, as part of a piped sequence! 
+
+a. Create a summary table of the total sum of *value* by *county* for "GRAPES WINE". 
+
+```{r}
+ca_grapes <- ca_ag %>% 
+  filter(crop_name == "GRAPES WINE", county != "State Total") %>% 
+  mutate(value = production * price_per_unit) %>% 
+  group_by(county) %>% 
+  summarize(
+    total_value_usd = sum(value)
+  ) %>% 
+  slice_max(total_value_usd, n = 10)
+
+ca_grapes # return the table in knitted doc
+```
+
+## 7. Customizing ggplot graphs
+
+```{r}
+cc_ag <- ca_ag %>% 
+  filter(county %in% c("San Luis Obispo", "Santa Barbara", "Ventura"))
+ggplot(data = cc_ag, aes(x = county, y = production)) + 
+  geom_jitter(width = 0.1, 
+              alpha = 0.8,
+              size = 2,
+              aes(color = county),
+              show.legend = FALSE) +
+  theme_minimal() +
+  scale_color_manual(values = c("purple",
+                                "darkorange",
+                                "cyan4")) +
+  labs(x = "California county",
+       y = "Agricultural production (acres per farm)", 
+       title = "California agriculture (2014)")
+```
+
+# LAB 3
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(gapminder)
+```
+
+### Part 0: Setup
+
+- Create a new R project (does not need to be version-controlled)
+- Add two subfolders: data and src
+- Download two data files from GauchoSpace: jornada_lizards.csv and lizard_abb.csv, and copy them into your project data folder
+- Open a new R Markdown document in your project, delete all below the setup chunk
+- Attach the necessary packages in the setup chunk (tidyverse, janitor, here, gapminder). Note, you probably need to install the `gapminder` package by running `install.packages("gapminder")` in the Console
+
+### Part 1: Tidying data continued
+
+In this section, we'll learn how to combine two data frames with `full_join()`, and to reshape with `pivot_longer()` and `pivot_wider()` to get data into tidy format.
+
+A. Join lizard common names with lizard data
+
+The following data are from Jornada Basin LTER: 
+
+- Title: Lizard pitfall trap data (LTER-II, LTER-III)
+- URL: https://portal.edirepository.org/nis/mapbrowse?packageid=knb-lter-jrn.210007001.36
+- Citation: Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e (Accessed 2020-07-05).
+- Lizard code list from: https://jornada.nmsu.edu/content/lizard-code-list
+
+Read in both lizards datasets: 
+
+- jornada_lizards.csv (pitfall trap data), which contains:
+     - common name
+     - site (site name)
+     - sex (M = male, F = female, J = juvenile)
+     - tail (B = broken, W = whole)
+- lizard_abb.csv (lizard abbreviations & common names)
+
+
+```{r}
+# Read in lizards data
+# Note: your path will differ depending on uyour project setup
+lizard_names <- read_csv(here("esm206-f2021-lab3","lizard_abb.csv"))
+
+lizard_traps <- read_csv(here("esm206-f2021-lab3","jornada_lizards.csv"))
+```
+
+Join together by the `common_name` variable with `full_join()`. See more information on `full_join()` - there are other options for more discriminating / excluding joins, but if you're not sure how they work **FULL JOIN** and deal with filtering later! 
+
+```{r}
+lizard_join <- lizard_traps %>% 
+  full_join(lizard_names)
+```
+Notice that it will first look for matching names, and join by those. But we don't *have* to have matching names. For example, let's make a version of lizard_traps that has common_name renamed as "lizard_name":
+
+```{r}
+lizard_traps_rn <- lizard_traps %>% 
+  rename(lizard_name = common_name)
+```
+
+We can then specify which column to join by: 
+
+```{r}
+lizard_join_2 <- lizard_traps_rn %>% 
+  full_join(lizard_names, by = c("lizard_name" = "common_name"))
+```
+
+Refresh our memory on finding counts: 
+
+```{r}
+tail_counts <- lizard_join %>% 
+  filter(common_name %in% c("Western Whiptail","Eastern Fence")) %>% 
+  count(common_name, tail)
+
+tail_counts
+```
+
+B. `pivot_longer()` and `pivot_wider()`
+
+Check out the gapminder data (reminder: why not put this `View(gapminder)` in your R Markdown code?)
+
+Wrangle it a bit:
+```{r}
+n_am <- gapminder %>% 
+  filter(country %in% c("United States", "Canada", "Mexico")) %>% 
+  select(country, year, pop)
+```
+Note: these data are already in tidy format. So you probably wouldn't want to do this: 
+
+Use `pivot_wider` to split years across multiple columns:
+
+```{r}
+n_am_wider <- n_am %>% 
+  pivot_wider(names_from = year, 
+              values_from = pop)
+```
+
+**Much more often** this wide format is the problem (e.g. year split up over multiple columns, but should be in a single column). We can use `pivot_longer()` to convert from wide-to-long format: 
+
+```{r}
+n_am_longer <- n_am_wider %>% 
+  pivot_longer(cols = `1952`:`2007`,
+               names_to = "year",
+               values_to = "pop"
+  ) %>% 
+  mutate(year = as.numeric(year))
+```
+
+Finally, let's just do a quick ggplot reminder: 
+
+```{r}
+ggplot(n_am_longer, aes(x = year, y = pop)) +
+  geom_line(aes(color = country)) +
+  geom_point(aes(color = country)) +
+  theme_minimal()
+```
+
+### Part 2: Writing functions in R
+
+What is a function? A function is a named bit of code that is meant to perform specific operations or tasks with user-defined arguments. 
+
+We've already been using tons of functions! All of our wrangling has been done with functions (`select()`, `filter()`, `mean()`, etc.) - but sometimes we might want to make our own. 
+
+To make our own function, we need to: 
+
+1. Name it
+2. Tell it what the arguments are (choose useful names here, too!)
+3. Specify the operation or tasks
+
+The easiest way: write the equation like a normal human, then use Command + Option + X as a shortcut to put it into function notation! 
+
+```{r}
+# Creating a distance function: 
+distance <- function(rate, time) {
+  rate*time
+}
+
+# Then try it out with your own arguments added! 
+distance(rate = 60, time = 2)
+```
+Example: the relationship between fish length (L) and weight (W) is estimated by: 
+
+$W=aL^b$
+
+A summary of parameters for different fish can be found in Ogle, D. FishR Vignette - Fish Condition and Relative Weights (2013). 
+
+For red snapper, the parameters are estimated (from Diaz 2004) as: 
+
+- a = 0.00001
+- b = 3.076
+
+with length (L) in cm and weight (W) in kg.
+
+Write a function for the red snapper relationship, then estimate the weight of a red snapper that is 42 cm long.
+
+```{r}
+
+fish_weight <- function(a, L, b) {
+  a*(L^b)
+}
+
+fish_weight(a = 0.00001, L = 42, b = 3.076)
+# 0.98 kg
+
+# Note: you can also just add arguments in the correct ORDER without specifically naming them, but I prefer being explicit. For example: 
+
+fish_weight(0.00001, 74, 3.076)
+
+# versus (same output): 
+
+fish_weight(a = 0.00001, L = 42, b = 3.076)
+```
+
+Cool! Now you can make your own functions, with arguments that you name and specify! 
+
+# LAB5
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(effsize)
+```
+
+## Setup & change RMarkdown settings
+
+Here, we'll use the "repo first" strategy to create a version-controlled R project. 
+
+- Make a new repo on GitHub (called esm206-lab5 or similar), with a ReadME
+- Clone to create a version-controlled R project with the same name
+
+We'll use the 'Settings > Output Settings' tool to update the YAML, changing the theme, highlighting, and adding a table of contents. 
+
+- Create a new R Markdown document, don't delete anything
+- Go to the gear icon "Settings" dropdown at the top of your .Rmd, and choose Output Options, where you can change the theme, add a table of contents, and more
+
+### Confidence intervals 
+
+To find a confidence interval with a single sample, use `t.test()` on the vector of sample values:
+
+```{r}
+# Create my sample (vector):
+otter_length <- c(38, 41, 50, 27, 32, 41, 48, 60, 43)
+
+# Use t.test() to return a CI (95% is default)
+t.test(otter_length)
+```
+Note: the mean and CI presented are meaningful, but the t-test results themselves are probably not - the default is to test a null hypothesis that the population mean = 0 (e.g. here, the null hypothesis test is that the mean otter length is 0 inches...which doesn't really make any sense).
+
+### T-test (1-sample t-test)
+
+More often, if we want to test a claim with our one sample, we'll use a one-sample t-test to compare our sample mean to a non-zero null hypothesis. 
+
+For example, if we see a claim that the mean length for the otter population being studied is 50 inches, then to perform a one-sample t-test we would update the default from `mu = 0` to `mu = 50`: 
+
+```{r}
+otter_test <- t.test(x = otter_length, mu = 50)
+otter_test
+```
+What does that p = 0.044 mean? If the true population mean length *is* 50 inches, there is a 4.4% chance that we could have a taken a random sample from that population (of the size & dispersion of our sample) that is *at least as far as our sample mean is from the population mean* by random chance. 
+
+### Two-sample t-test
+
+One-sample tests to compare a single sample to a null hypothesis population parameter are actually pretty rare. Much more common is to collect a sample for different groups, then ask: How different are the sample means? And are they different enough that I think they are drawn from *populations* with different means? 
+
+In that case (caveat: assumptions!!!), it maybe appropriate to perform a two-sample t-test to compare means. 
+
+In this case, let's say we have samples for horn length of desert and sierra bighorn sheep. If we perform at two-sample t-test, we are asking: What is the probability that I would have found samples with means that are *at least as different as the ones I've found* by random chance, if they are drawns from populations with the same mean? 
+
+Keep in mind, it's important to LOOK AT, EXPLORE, and THINK REALLY HARD about data (distribution, outliers, data type, etc.) before choosing a type of test.
+
+Here, we'll say we've done all of that work already, and have decided that a two-sample t-test is appropriate. 
+
+Use `t.test()` with the sample vectors as input arguments to run a two-sample t-test for means comparison. 
+
+```{r}
+desert_bighorns <- c(32, 44, 18, 26, 50, 33, 42, 20)
+sierra_bighorns <- c(28, 31, 40, 42, 26, 29, 31)
+
+t.test(x = desert_bighorns, y = sierra_bighorns)
+
+# To find the standard deviation of each, used below in reporting (if working with a data frame, you would probably have these in a summary table created with group_by + summarize): 
+
+sd(desert_bighorns)
+sd(sierra_bighorns)
+```
+We see that the means for each group are shown in the last row of the output (33.13 and 32.43 cm, respectively, for desert and sierra bighorns). The CI here is for the difference in means (so might not be worth reporting). But to report the t-test part of this, we'd include something like: 
+
+"Mean horn lengths for Desert bighorns (33.13 $\pm$ 11.56 cm, n = 8) were only slightly longer than those of Sierra bighorns (32.43 $\pm$ 6.13 cm, n = 7), a difference of just over 2% (values are mean $\pm$ 1 standard deviation; t(10.9) = 0.15, p = 0.88)."
+
+That last part is where the hypothesis test information is contained, which is usually in the format of: 
+
+`t(df) = t-value, p = p-value`
+
+Where the `t(df)` indicates the t-distribution with df (degrees of freedom), the t-value is the value of the t-statistic (a measure of how different from 0 your sample means difference is on the t-distribution), and the p-value is the probability of randomly finding sample means at least as different as yours are by random chance (given n and dispersion) if they are drawn from populations with the same mean. 
+
+Using the built-in `mpg` dataset from `ggplot2` (so you need the tidyverse loaded for it to work), I'll compare mean city mpg for SUVs versus compact cars using a 2-sample t-test. 
+
+First, run `View(mpg)` in the Console to take a look at the data. 
+
+### 1. Make a subset with only those groups
+
+```{r}
+compact_suv <- mpg %>% 
+  filter(class %in% c("suv", "compact"))
+```
+
+### 2. Visual data exploration with histograms and QQ-plots
+
+```{r}
+ggplot(data = compact_suv, aes(x = cty)) +
+  geom_histogram(bins = 15) +
+  facet_wrap(~class)
+
+ggplot(data = compact_suv, aes(sample = cty)) +
+  geom_qq() +
+  facet_wrap(~class)
+```
+### 3. Find some summary statistics
+
+```{r}
+car_stats <- compact_suv %>% 
+  group_by(class) %>% 
+  summarize(
+    mean_city = mean(cty),
+    sd_city = sd(cty),
+    sample_size = n()
+  )
+
+car_stats
+```
+
+Sample size in combination with histograms & QQ plots: I feel OK about using a t-test for a means comparison. 
+### 4. Split df into groups, then pull sample vectors
+
+```{r} 
+compact_sample <- compact_suv %>% 
+  filter(class == "compact") %>% 
+  pull(cty)
+
+suv_sample <- compact_suv %>% 
+  filter(class == "suv") %>% 
+  pull(cty)
+```
+
+### 5. Then run a two-sample t-test with those vectors as the inputs
+
+```{r}
+car_t <- t.test(compact_sample, suv_sample)
+
+car_t
+```
+There is a negligible probability of randomly selecting two samples from populations with the same mean that are this different by chance. They are almost certainly from populations with different mean mpgs - which makes sense. Of course they do. More interesting: How different are they?
+
+### 6. Cohen's D
+
+```{r}
+car_cohen <- cohen.d(compact_sample, suv_sample)
+# Large effect size
+
+car_cohen
+```
+
+### 7. In-line referencing of stored model / analysis outputs
+
+The effect size was large (Cohen's *d* = `r car_cohen$estimate`).
+
+Writing it all out: Mean gas mileage for compact cars (`r round(car_t$estimate[1],2)` mpg) is greater than that for SUVs (`r round(car_t$estimate[2],2)` mpg); the effect size is large (Cohen's *d* = `r round(car_cohen$estimate,2)`) and the difference significant (two-sample t-test, t = `r round(car_t$statistic,2)`, p < 0.001)
+
+
+# LAB 6
+
+This week, you'll be trying a DIY coding lesson. There is not an accompanying recording. 
+
+Follow along with the instructions below to explore data, perform linear regression, and evaluate diagnostic plots to assess model assumptions. The objectives of Lab Week 6 are: 
+
+- Example of rank-based tests for rank / medians comparison (Mann-Whitney U)
+- Simple linear regression by OLS in R with `lm()`
+- Check assumptions of OLS (diagnostic plots with `plot()`)
+- Visualize linear model, and summarize in text
+- Find correlation by Pearson's *r* 
+
+## Part 0: Set-up a version-controlled R Project
+
+Create a new version-controlled R Project for the Week 6 lab (by first making a new repo in GitHub, then connecting to a new R Project). Within the root of your project (you'll just have a single .Rmd file), create a new .Rmd in which you complete this lab.
+
+There is no external data needed (just using `penguins`) data from the `palmerpenguins` package.
+
+## Part 1: Attach packages
+
+In your .Rmd setup chunk, attach the following packages:
+
+- `tidyverse`
+- `palmerpenguins`
+- `ggpubr` (see note below)
+- `broom`
+
+**Note:** you probably need to install the `ggpubr` package by running `install.packages("ggpubr")` in the Console.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(palmerpenguins)
+library(ggpubr)
+library(broom) 
+library(equatiomatic)
+```
+
+Now, follow along with the examples below to practice Mann-Whitney U (rank-based alternative to independent samples t-test) and linear regression! Remember: the .Rmd key is also posted. You will want to look at that to see how I refer to model outputs when reporting (instead of manually copying & pasting values). 
+
+## Part 2: A rank-based test example (Mann Whitney U)
+
+In lecture this week we learned a bit about non-parametric, rank-based alternatives to some of the hypothesis tests we've been doing to compare means, including: 
+
+- Mann-Whitney U to compare ranks (medians) between two unpaired samples (non-parametric alternative to two-sample t-test)
+- Kruskall-Wallis to compare ranks (medians) between > 2 samples (non-parametric alternative to one-way ANOVA)
+
+As an example, let's make some mock unpaired data and investigate the difference in ranks (often called a *medians comparison*) by Mann-Whitney U using the `wilcox.test()` function (you'd also use this for a paired Wilcoxon-Signed-Rank test, with an additional 'paired = TRUE' argument, if samples were paired). 
+
+First, let's create two sample vectors called `gp_1` and `gp_2`.
+We use `set.seed()` here to create a "pseudorandom" sample, so that we all get the same samples -- otherwise we'd all get something different! We use `sample.int()` to create random samples with integers from 1 to x, of size = ?, with replacement: 
+
+```{r}
+set.seed(1414)
+gp_1 <- sample.int(20, size = 15, replace = TRUE)
+
+set.seed(1424)
+gp_2 <- sample.int(30, size = 15, replace = TRUE)
+```
+
+Take a look at vectors `gp_1` and `gp_2` by calling each in the Console.
+
+We ask: Is there evidence for a significant difference in ranks (medians) between the populations from which `gp_1` and `gp_2` were drawn?
+
+First, always look at it (here, using the base R `hist()` function to create an exploratory histogram of each -- fine if you're only doing this for a quick look with a vector, but customization can be more challenging than in `ggplot`):
+
+```{r}
+hist(gp_1)
+hist(gp_2)
+```
+
+If I want to compare ranks between `gp_1` and `gp_2`, what are some reasons I might choose a rank-based test?
+
+1. Not clearly normally distributed from exploratory histograms
+2. Somewhat small sample size (n = 15 for each)
+3. I've decided that ranks (or, medians) are a more valuable metric to compare for these data. 
+
+Here, we'll perform Mann-Whitney U to answer "Is there a significant difference in ranks (medians) between `gp_1` and `gp_2`?" using the `wilcox.test()` function.
+
+```{r}
+my_mwu <- wilcox.test(gp_1, gp_2)
+
+# Note: you will get a warning here that is just a "heads up" - if there are ties in ranks, the p-value is estimated using a normal approximation (and is fine)
+```
+
+Call `my_mwu` in the Console to see the stored output of the test. 
+
+What does that *p*-value of 0.28 actually mean? It means that if the null hypothesis is true (these samples were drawn from populations with the same median), there is a probability of 0.28 that we could have found median values *at least as different as ours* by chance. In other words: not sufficient evidence to reject the null hypothesis of equal ranks (or medians) using a significance level of 0.05.
+
+Though not doing it today, see `?kruskal.test` for more information about a rank-based test for comparing medians across > 2 groups (i.e. the rank-based alternative to one-way ANOVA). 
+
+## Part 3: Simple linear regression
+
+We'll exploring the relationship between two continuous variables, using the `penguins` dataset from the `palmerpenguins` package in R.
+
+Here, we'll explore the relationship between flipper length and body mass for penguins, including all 3 penguin species included in the `penguins` dataset.
+
+### A. Look at it!
+
+Always. This should always, always be the first thing we do. 
+
+Let's make an exploratory scatterplot of penguing flipper length versus body mass (here, we will *only* use those variables - keeping in mind as we move forward that we probably also want to include species and sex as variables in our model...).
+
+```{r}
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point()
+```
+
+We should ask questions about our exploratory visualization, like: 
+
+- Does it look like a linear relationship makes sense?
+- Do we have any concerns about modeling as a linear relationship?
+- Any notable outliers?
+- Initial thoughts about homoscedasticity (explored more later)? 
+
+Here, it looks like overall a linear relationship between flipper length and body mass makes sense here (moving forward, we're learn how to include species and sex as part of the model, but for now we'll just use the single exploratory variable `flipper_length_mm`). 
+
+### B. Model it
+
+Once we've decided that a linear relationship makes sense, we'll model it using `lm()`. 
+
+Note that we haven't checked all assumptions yet. That's because a lot of our assumptions for linear regression are based on model *residuals* (e.g. normality & homoscedasticity of residuals), which we can't calculate until after we find the predicted values from the model ($residual = y_{actual} - y_{predicted}$). 
+
+So make the model first: 
+```{r}
+# Linear model, stored as penguin_lm:
+penguin_lm <- lm(body_mass_g ~ flipper_length_mm, data = penguins)
+
+# Return the complete overview:
+summary(penguin_lm)
+```
+
+
+- Both the intercept and flipper_length_mm coefficients are significantly different from zero (not super interesting)
+- The R^2^ value is 0.759 - meaning that 75.9% of variance in body mass is explained by flipper length
+
+### C. Access model outputs
+
+We can access the coefficients for the model using:  
+
+- The slope is `r round(penguin_lm$coefficient[2],2)` (g / mm)
+- The y-intercept is `r round(penguin_lm$coefficient[1],2)` (g)
+- The full equation is mass = `r round(penguin_lm$coefficient[2],2)`*(flipper length) + (`r round(penguin_lm$coefficient[1],2)`)
+
+**But** trying to get all of the statistical information from the `summary()` function would be kind of a mess. 
+
+We can use the `broom::tidy()` function to get the model outputs in nice data frame format: 
+
+```{r}
+penguin_lm_tidy <- broom::tidy(penguin_lm)
+```
+
+Look at the output format by calling `penguin_lm_tidy` in the Console. Note that it's a nice table of all model outputs, which we can then refer to later on. 
+
+Some examples: 
+
+```{r}
+# Get the intercept: 
+penguin_int <- penguin_lm_tidy$estimate[1]
+penguin_int
+
+# Then to get the flipper_length coefficient:
+penguin_coef <- penguin_lm_tidy$estimate[2]
+penguin_coef
+```
+
+What about getting some other model information (degrees of freedom, F-statistic, p-value, etc.)?
+
+Many of these statistical outcomes can be accessed more easily using `broom::glance()`. 
+
+```{r}
+# Metrics at a glance: 
+penguin_lm_out <- broom::glance(penguin_lm)
+penguin_lm_out
+```
+
+We can use the results of both to write a statement about the model that will **automatically update** if anything about the model changes! Make sure to look at the .Rmd (not just this knitted html) to learn how to reference the outputs automatically in text. For example: 
+
+"Simple linear regression was used to explore the relationship between penguin flipper length (mm) and body mass (g) across all three penguin species, and including both male and female penguins. A significant regression model was found ($\beta$ = `r round(penguin_coef,3)`, F(`r penguin_lm_out$df`,`r penguin_lm_out$df.residual`) = `r round(penguin_lm_out$statistic,1)`, p < 0.001) with an R^2^ of `r round(penguin_lm_out$r.squared,3)`."
+
+**Note:** This might seem *really* tedious to write out, but the advantages are worth it. All values will be automatically updated when the model is updated! Reproducible and way less opportunity for human error. Plus, once you have this template statement made, you can reuse it for future regression models and just replace `penguin_lm_out` and `penguin_coef` with the appropriate objects for your new model! 
+
+Note that I use "p < 0.001" here if the p-value is very small - this is somewhat standard. 
+
+You can also use the `equatiomatic` package to get the output as a LaTeX equation: 
+```{r}
+extract_eq(model = penguin_lm, use_coefs = TRUE)
+```
+
+
+### D. Explore model assumptions
+
+Recall that we have assumptions for linear regression we need to explore, some related to the residuals.
+
+- Linearly related variables (CHECK - already looked & thought hard)
+- Normally distributed *residuals*
+- Homoscedasticity (constant residuals variance)
+- iid residuals (no serial correlation) - more often a concern in time series data
+
+Use the `plot()` function on the model, which will automatically create four useful visualizations to consider assumptions! 
+
+```{r}
+plot(penguin_lm)
+```
+
+Notice that four plots show up. What do they show? Make sure to watch Part 2 of the lecture, which discusses how we can interpret each of these diagnostic plots. 
+
+- **The first one**: fitted values vs. residuals 
+- **The second one**: QQ-plot for residuals 
+- **The third one**: another way of looking at fitted vs. residuals (these are just standardized residuals, but you can interpret it the same way)
+- **The fourth one**: Cook's distance, a measure of "influence" or "leverage" that individual points have on the model - often considered a way to explore outliers. 
+
+See the Week 6 Part 2 Lecture video for more information about how to interpret these outcomes, but in summary: graphs 1 & 3 are useful for thinking about homoscedasticity; graph 2 (QQ plot) helps us consider normality of residuals; graph 4 reveals the Cook's distance (a measure of how much leverage any single observation has on the model).
+
+### E. Visualize the model
+
+Now that we've explore the assumptions and have decided that linear regression is a valid tool to describe the relationship between flipper length and body mass, let's look at the model.
+
+- Use `geom_smooth(method = "lm")` to add a linear model to an existing scatterplot
+
+- Use `stat_cor()` and/or `stat_regline_equation()` to add equation information directly to the plot panel, at an x- and y-position that you specify (and yes, you can mess with the digits & appearance here)
+
+```{r}
+
+ggplot(data = penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm",
+              color = "red",
+              size = 0.5,
+              fill = "gray10",
+              alpha = 0.5) +
+  theme_light() +
+  ggpubr::stat_regline_equation(label.x = 180, label.y = 5700)
+  
+```
+
+### F. Find Pearson's *r* for correlation: 
+
+In lecture we talked about the coefficient of determination, R^2^, which tells us how much of the variance in the dependent variable is explained by the model. 
+
+We might also want to explore the strength of the correlation (degree of relationship) between two variables which, for two linearly related continuous variables, can be expressed using Pearson's *r*. 
+
+Pearson's *r* ranges in value from -1 (perfectly negatively correlated - as one variable increases the other decreases) to 1 (perfectly positively correlated - as one variable increases the other increases). A correlation of 0 means that there is no degree of relationship between the two variables. 
+
+Typical guidelines look something like this (there's wiggle room in there): 
+
+- *r* = 0: no correlation
+- *r* < |0.3|: weak correlation
+- *r* between |0.3| and |0.7|: moderate correlation
+- *r* > |0.7|: strong correlation
+
+We'll use the `cor.test()` function, adding the two vectors (`flipper_length_mm` and `body_mass_g`) as the arguments. The function reports the Pearson's *r* value, and performs a hypothesis test with null hypothesis that the correlation = 0. 
+
+```{r}
+penguins_cor <- cor.test(penguins$flipper_length_mm, penguins$body_mass_g)
+```
+
+Here, we see that there is a strong positive correlation between penguin flipper length and body mass (*r* = `r round(penguins_cor$estimate,2)`, t(`r penguins_cor$parameter`) = `r round(penguins_cor$statistic,2)`, p < 0.001). 
+
+**Note**: Once you have a "template" statement, you can just replace `penguins_cor` here with whatever your correlation analysis is stored as! You don't need to recreate the wheel every time! 
+
+## END LAB - CONGRATULATIONS!
+
+# LAB 7
+
+### 1. Overview
+
+In this week's lab, you'll follow along to learn how to perform, assess, interpret and communicate outcomes from multiple linear regression using the **penguins** data from the `palmerpenguins` package. 
+
+When we perform multiple linear regression, we are trying to understand the relationship between multiple predictor variables (continuous or categorical), and a single continuous output variable. Make sure to watch the Week 8 recorded lecture, and read the posted document on GauchoSpace, to learn more. 
+
+### 2. Set-up
+
+- Create a new .Rmd (this will be self-contained, so you don't need to worry about making it a project or external file paths or anything)
+- Delete everything below the first code chunk
+- In the setup chunk, attach the following packages:
+
+    - `tidyverse`
+    - `palmerpenguins`
+    - `GGally` (you probably need to install this one)
+    - `broom`
+    - `kableExtra`
+    - `modelsummary` (you probably need to install this one)
+    
+So your setup chunk will look like this: 
+
+```{r setup, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE)
+
+library(tidyverse)
+library(palmerpenguins)
+library(GGally) # May need to install this one
+library(broom)
+library(kableExtra)
+library(modelsummary) # May need to install this one
+library(stargazer) # Optional
+
+```
+
+### 3. Explore the **penguins** data
+
+See more information on the Palmer Penguins data (collected by Dr. Kristen Gorman and colleagues at Palmer Station LTER): https://allisonhorst.github.io/palmerpenguins/
+
+#### a. Initial exploration
+
+We have a number of functions that can help take a quick look at our data, including: 
+
+- `View(penguins)` to view the entire data frame - remember to do this in the **Console** instead of as stored code in your .Rmd
+- `head(penguins)` to look at the first 6 lines
+- `names(penguins)` to see the variable names
+- `summary(penguins)` to get a summary by variable
+
+Run the above functions in the Console to remind yourself of the structure, organization and variables in the **penguins** data. 
+
+#### b. Pairs plots with `GGally`
+
+Now, we'll do some multivariate exploration using a new package, `GGally` (see more on the package [here](https://ggobi.github.io/ggally)).
+
+Add a new code chunk, and use the `GGally::ggpairs()` function to explore relationships between continuous quantitative variables. 
+
+Let's look at a few different outputs from `ggpairs()`:
+
+**"Out-of-the-box" (includes all variables):**
+
+```{r}
+ggpairs(penguins)
+```
+
+Does that seem like too much? **It IS.** Let's narrow it down a bit, for example to only the continuous variables (these are the variables we're usually most concerned about linearity between re: assumptions).
+
+We can select just `species` and the four continuous variables (`bill_length_mm` through `body_mass_g` in the data frame), then pipe right into `ggpairs()`, updating aesthetics within it like we would in `ggplot`:
+
+```{r}
+penguins %>%
+  select(species, bill_length_mm:body_mass_g) %>%
+  ggpairs(aes(color = species))
+```
+
+The resulting matrix gives us a LOT of information about distributions within groups (the histograms is column 1, boxplots in row 1, and density plots along the diagonal), and relationships (the scatterplots below the diagonal, and the correlation values above the diagonal). 
+
+Most importantly, it looks like there aren't notable *non-linear* relationships existing within species between any of the continuous variables (in the scatterplots). 
+
+Could we make each of these graphs separately with `ggplot2` to consider relationships? Sure! But `GGally` makes it quite a bit easier for us by automating it. 
+
+### 4. Multiple linear regression
+
+#### a. Build your model
+
+Recall: some of the assumptions of linear regression (e.g. heteroscedasticity and normality of residuals) are diagnosed *after* the model is created. 
+
+So our next step is to do multiple linear regression. Recall, the general code structure (without interaction terms) is:
+
+  `model_name <- lm(dv ~ iv1 + iv2 + iv3 + ..., data = df_name)`
+    
+In this example, we will model **penguin mass** to see how it changes with respect to three predictor variables: **flipper length**, **penguin species**, and **penguin sex**. Are there other possible models to explore? Absolutely, and in the real world you may want to try them out & compare. For today, we'll just consider that one model. 
+
+Insert a new code chunk, and build your model: 
+
+```{r}
+penguin_lm <- lm(body_mass_g ~ flipper_length_mm + species + sex, data = penguins)
+```
+
+#### b. Take a look at the result
+
+View the outputs by running `summary(penguin_lm)`:
+```{r}
+summary(penguin_lm)
+```
+
+#### c. Interpreting the model results
+
+##### Coefficients
+
+There's a lot there - let's break down some of the major pieces. We'll focus on the output starting with the **Coefficients** section (above that is just telling you the model variables & some not-super-useful quantiles for the residuals, which we'll explore later on).
+
+To get information about the coefficients in a more manageable format (a data frame), use `broom::tidy()`:
+
+```{r}
+penguin_lm_tidy <- tidy(penguin_lm)
+
+# Return it:
+penguin_lm_tidy
+```
+
+To start, **how do we interpret these coefficients? (in the 'estimate' column)**
+
+- **Intercept:** This coefficient value (`r round(penguin_lm_tidy$estimate[1],1)`) is not meaningful to interpret here on its own (though should still be included when making predictions). Technically, it is the expected mass of a penguin with flipper length of 0 mm. Often, the intercept is not useful to consider on its own (and reflects limits to how far we should extrapolate our model results beyond our observed data).
+- **flipper_length_mm:** The coefficient for flipper length (`r round(penguin_lm_tidy$estimate[2],1)`) is the average change we expect to see in body mass (grams) for a 1 mm increase in flipper length. 
+- **speciesChinstrap:** Since the reference species in this model is Adélie, the coefficient for Chinstrap here (`r round(penguin_lm_tidy$estimate[3],1)`) tells us that on average, we expect Chinstrap penguins to weigh `r round(-penguin_lm_tidy$estimate[3],1)` g **less** than Adélie penguins if other variables are fixed. 
+- **speciesGentoo:** Similarly, this coefficient is interpreted *with respect to the reference species Adélie*. The Gentoo coefficient (`r round(penguin_lm_tidy$estimate[4],1)`) tells us that on average, we expect Gentoo penguins to weigh `r round(penguin_lm_tidy$estimate[4],1)` g **more** than Adélie penguins if other variables are fixed. 
+- **sexmale:** This coefficient is also for a categorical variable (where female is the reference level). We interpret the coefficient for *sexmale* (`r round(penguin_lm_tidy$estimate[5],1)`) as follows: if penguins are consistent across all other variables, we expect a *male* penguin to weigh `r round(penguin_lm_tidy$estimate[5],1)` g **more** than a female penguin, on average. 
+
+What else is included in that output? The standard error is a measure of the accuracy of each coefficient estimate; the t-value is the test statistic comparing the *null hypothesis that the coefficient = 0* to the estimated value of the coefficient; the *p*-value is the probability of finding a coefficient *at least that different from zero* by random chance if the null hypothesis (coefficient = 0) is true. 
+
+Excluding the meaningless intercept here, that means that only the coefficient for **speciesChinstrap** is not significantly different from zero (i.e., if all other variables are constant, chinstrap mean mass does not differ significantly from Adélie mean mass) - which is consistent with exploratory analyses that show very similar body masses for those two species.  
+**Critical thinking:** Do the other coefficients (for flipper length, speciesGentoo and sexmale) align with your expectations based on exploratory data visualization? You should **always** consider model outputs alongside data visualization & exploration! 
+
+##### Overall model fit and significance
+
+You can see and parse information for the overall model using `broom::glance()`:
+
+```{r}
+penguin_lm_fit <- glance(penguin_lm)
+
+# Return output:
+penguin_lm_fit
+```
+
+The pieces that we'll focus on for now are: 
+
+- `adj.r.squared`: Adjusted R^2^ (% variance in body mass explained by the model). The adjusted R^2^ value here (`r round(penguin_lm_fit$adj.r.squared, 2)`) indicates that `r 100*round(penguin_lm_fit$adj.r.squared, 2)` % of variance in body mass is explained by the variables included in the model.  
+- `sigma`: residual standard error (measure of model accuracy)
+- `p.value`: The overall model *p*-value
+
+### 5. Model diagnostics
+
+Recall, we need to evaluate some important assumptions of multiple linear regression that can be best evaluated *after* the model is created, including:
+
+- Normality of residuals
+- Heteroscedasticity
+
+As we did for simple linear regression, use the `plot()` function to look at diagnostic plots for the model. Run the code below to produce diagnostic plots, from which we can see:
+
+- Residuals are *very* normally distributed (from the QQ plot)
+- Residuals variance is relatively constant across fitted values of the model, indicating homoscedasticity
+- No notable outliers with disproportionate leverage on the model results (as seen from the Cook's distance graph)
+
+Overall takeaway: no concerns about assumption violations based on these diagnostic plots.
+
+```{r}
+plot(penguin_lm)
+```
+
+
+### 6. Communicate results of your model
+
+Because there is a lot of information to include when reporting the results of multiple linear regression, results are most often reported in a table. They are also often challenging to create manually, though `broom::tidy()` provides a good starting point. 
+
+There also exist a number of R packages to automate creating regression tables (for a great summary of different table-making packages from David Keyes, see: https://rfortherestofus.com/2019/11/how-to-make-beautiful-tables-in-r/). 
+
+Here are a couple of options: 
+
+#### a. A regular `kable` table
+
+Starting from the tidy output and finalize manually (possibly with `kableExtra`, `gt`, or similar table-making packages). You'd want to further customize this (e.g. round to a reasonable number of significant figures, update 'Term' words, etc.). 
+
+*Note:* If you use this method, the caption should contain the overall model fit information (e.g. R^2^ and model *p*-value). 
+
+```{r}
+penguin_lm_tidy %>% 
+  kable(col.names = c("Term",
+                      "Estimate",
+                      "St Error",
+                      "t-statistic",
+                      "p-value")) %>% 
+  kable_styling(full_width = FALSE)
+
+```
+
+#### b. `modelsummary` package
+
+```{r}
+modelsummary(penguin_lm)
+```
+
+
+<!-- #### c. The `stargazer` package
+
+Another option is the `stargazer` package, which creates a comprehensive regression table (including in html format). 
+
+Use the `stargazer()` function on your model name to produce the table. **NOTE:** to get this to appear correctly in your knitted html, you need to include two things:
+
+- In the **code chunk header** add an option `results = "asis"` (i.e., the entire code chunk header should look like this: `{r, results = "asis"}`)
+- Include the argument `type = "html"` within the `stargazer()` function as below (since the default is LaTeX)
+
+```{r, results = "asis"}
+stargazer(penguin_lm, type = "html")
+```
+
+-->
+
+## END LAB
+
+# LAB 8
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+**Lab 8 Objectives:**
+
+- Explore multivariate data (SLO housing prices)
+- Perform multiple linear regression
+- Assess diagnostics
+- Compare different models by AIC
+- Explain model outputs
+- Make a nice table of regression results
+- Make predictions using a final model
+- git branch
+
+### 1. Load packages
+
+```{r packages}
+
+library(tidyverse)
+library(corrplot)
+library(stargazer)
+library(broom)
+library(modelsummary)
+
+```
+
+### 2. Load data, and filter to only include homes in SLO, Arroyo Grande, Santa Maria-Orcutt, and Atascadero
+
+```{r}
+
+homes <- read_csv("slo_homes.csv") # Read in data
+
+homes_sub <- homes %>% 
+  filter(City == "Arroyo Grande" | City == "San Luis Obispo" | City == "Atascadero" | City == "Santa Maria-Orcutt")
+
+```
+
+### 3. Go exploring (visual) + think critically
+
+*Note: It's OK to LOOK at things separately, even if you're including all in a model together!*
+
+Example: if I want to compare distribution of housing prices by CITY (ignoring all other variables), I can do that.
+
+```{r by_city}
+
+mean_by_city <- homes_sub %>% 
+  group_by(City) %>% 
+  summarize(
+    mean_val = mean(Price)
+  )
+
+by_city <- ggplot(homes_sub, aes(x = Price)) +
+  geom_density(aes(color = City, fill = City), alpha = 0.3) + # Note: just to show what the geom_violin shows
+  theme_classic() +
+  scale_x_continuous(expand = c(0,0), limits = c(0,3e6)) +
+  scale_y_continuous(expand = c(0,0)) +
+  labs(x = "Home Prices (USD)", y = "Density")
+
+by_city
+
+```
+
+Or another question: Overall relationship between home square footage and price, separated by City? 
+
+```{r by_sqft}
+
+by_sqft <- ggplot(homes_sub, aes(x = SqFt, y = Price)) +
+  geom_point(aes(color = City, pch = Status), alpha = 0.5) 
+
+by_sqft
+
+# Observations here: Does relationship appear ~ linear? Anything else we can pick out re: trends, outliers, etc.? What is the general trend? Any outliers? Is there reason enough for us to omit it?
+
+```
+
+```{r explore_data}
+
+# Correlation matrix: any concerns about collinearity? 
+# Histogram of final: 
+# Relationships for all:
+
+```
+
+At this point: any major concerns? What is going to let us know if our assumptions are really violated? 
+
+### 4. Multiple linear regression
+
+Multiple linear regression in R follows the same syntax we've been using so far: 
+    lm(y ~ x1 + x2 + x3..., data = df_name)
+    
+Let's try this model a couple of different ways: 
+
+(1) Use all available variables (saturated model) 
+(2) Use only SqFt as a predictor for "home size" generally, and omit PricePerSqFt (since it's derived from two other existing variables in the model)
+
+```{r saturated}
+
+homes_lm1 <- lm(Price ~ City + Bedrooms + Bathrooms + SqFt + PricePerSqFt + Status, data = homes_sub) 
+
+summary(homes_lm1)
+
+# This makes no sense! Why not? Interpret several of the coefficients (for both continuous predictors and factor levels). What should we exclude? Include? Based on WHAT?
+
+```
+
+The next model: Excluding bedrooms and bathrooms, AND price per square foot...
+
+```{r subset}
+
+homes_lm2 <- lm(Price ~ City + SqFt + Status, data = homes_sub)
+
+summary(homes_lm2) # NOW this is something that makes sense conceptually and mathematically...
+
+# Interpret coefficients for City, SqFt, and Status. Do these make sense based on what you know about housing prices? 
+
+```
+
+Wait...but what if I wanted everything to be with respect to a Regular sale status? Then I need to change my factor levels. We've done this before, here we'll use a different function (fct_relevel) from *forcats* package in the tidyverse. 
+
+```{r fct_relevel}
+
+homes_sub$Status <- factor(homes_sub$Status)
+# Check to ensure it's a factor now
+
+class(homes_sub$Status) # Yay! A factor
+
+# Check levels:
+levels(homes_sub$Status) # Current reference level is 'Foreclosure'
+
+# Reassign reference level of "Status" to "Regular":
+homes_sub$Status <- fct_relevel(homes_sub$Status, "Regular")
+
+# Now run the regression again - same equation, but now the reference levels are different! 
+homes_lm3 <- lm(Price ~ City + SqFt + Status, data = homes_sub)
+
+summary(homes_lm3) 
+
+# Question: What happens if you run all of this, then go back to the code chunk above and run that code again? It'll change there TOO...remember, information in R is stored. 
+
+# Now: How do we interpret the coefficients for Short Sale/Foreclosure vs. Regular sales? 
+
+```
+
+Interpret the statistical outcomes above. 
+
+### 5. Model diagnostics
+
+Remember, since we're concerned about *residuals* (distance that actual observations exist from model predictions), we can only evaluate some assumptions *after* running the regression. 
+
+Then we can evaluate model diagnostics using the plot() function:
+
+```{r diagnostics}
+
+plot(homes_lm3)
+
+# Nothing really concerning...but there are errors. What variables do you think might be missing from the models that could account for some of the error?
+
+# Some examples: Lot size (yard?), ocean view, etc.
+
+# But overall, looks good and makes sense! 
+
+```
+
+### 6. Model comparison by Akaike Information Criterion
+
+The AIC is a quantitative metric for model "optimization" that balances complexity with model fit. The best models are the ones that fit the data as well as possible, as simply as possible. Recall: lower AIC value indicates a *more optimal* balance of fit & complexity, but is not *the* way we pick a model.
+
+```{r AIC}
+
+sat_aic <- AIC(homes_lm1) # 10699
+final_aic <- AIC(homes_lm3) # 11148
+
+# Which would you pick?
+```
+
+### 7. Regression tables with *stargazer* & *modelsummary*
+
+```{r stargazer, results = 'asis'}
+lm_tab <- stargazer(homes_lm1, homes_lm3, type = "html")
+
+# Or with modelsummary: 
+modelsummary(list(homes_lm1, homes_lm3))
+```
+
+### 8. Making predictions
+
+To predict the home price for existing observations, use `broom::augment()`.
+
+```{r}
+pred_price <- broom::augment(homes_lm3)
+
+# Make a histogram of residuals just to see it: 
+ggplot(data = pred_price, aes(x = .resid)) +
+  geom_histogram(bins = 20) +
+  scale_x_continuous(limits = c(-0.5e6, 0.5e6))
+```
+
+What if we want to make predictions for *new* homes not in our existing dataset? Using your final selected model, predict the housing price for a range of home sizes, sale status, and city. 
+
+The predict() function uses the following syntax:
+
+      predict(model_name, newdata = new_data_name)
+      
+Defaults are to exclude the prediction SE and mean confidence interval - if you want to include, use arguments
+
+      se.fit = TRUE
+      interval = "confidence" 
+      interval = "prediction"
+
+First, you need to create a new data frame of values that contain ALL NECESSARY VARIABLES **with the same variable names AND level strings**.
+
+```{r df_new}
+
+# First, make a new data frame
+# Note that the df_new created below has the SAME variable names and level strings as the original model data (otherwise R won't know how to use it...)
+# Work through this on your own to figure out what it actually does:
+
+df_new <- data.frame(City = rep(c("San Luis Obispo",
+                                  "Santa Maria-Orcutt",
+                                  "Atascadero",
+                                  "Arroyo Grande"), 
+                                each = 60), 
+                     SqFt = rep(seq(from = 500,
+                                    to = 3500, 
+                                    length = 20), 
+                                times = 12), 
+                     Status = rep(c("Regular",
+                                    "Foreclosure",
+                                    "Short Sale"), 
+                                  times = 12, 
+                                  each = 20))
+
+```
+
+Make predictions for the new data using predict():
+
+```{r predict}
+
+price_predict <- predict(homes_lm3, newdata = df_new, se.fit = TRUE, interval = "confidence") # Makes prediction
+
+# Bind to the data to make it actually useful:
+
+predict_df <- data.frame(df_new, price_predict)
+
+```
+
+Then visualize it!
+
+```{r graph, echo = FALSE, messages = "hide", warning = FALSE}
+
+predict_graph <- ggplot(predict_df, aes(x = SqFt, y = fit.fit)) +
+  geom_line(aes(color = City)) +
+  geom_point(data = homes_sub, aes(x = SqFt, y = Price), alpha = 0.5) +
+  facet_wrap(~Status) +
+  labs(x = "Home Size (Sq. Ft.)", y = "Predicted Home Price ($)") +
+  scale_x_continuous(limits = c(500,3500), breaks = seq(500, 3500, by = 1000)) +
+  scale_y_continuous(limits = c(0,1.5e6))
+  theme_light() 
+
+predict_graph
+
+```
+
+END LAB
+
+# LAB 9
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## vector 
+
+### creating a vector
+```{r}
+# numeric vectior
+my_vector <- vector(mode = "numeric", length = 100) 
+# logical vector
+my_second_vector <- vector(mode = "logical", length = 20)
+```
+
+## vector properties 
+
+```{r}
+# what's the length of my vector?
+length(my_vector)
+# what's the class?
+class(my_vector)
+```
+
+#### accessing vectors
+
+```{r}
+# using c to create a vector
+my_vector <- c(1:50)
+# what's the first element?
+my_vector[1]
+# last element?
+my_vector [50]
+# select a range from a vector
+my_vector[3:7]
+```
+
+## matrices
+
+### creating matrices
+
+```{r}
+# create a 10x10 matrix full of NAs, specify numbers of columns and rows
+my_matrix <- matrix(data = 1:100, nrow = 20, ncol = 5)
+```
+
+### matrix properties
+
+#### dimensions
+```{r}
+# find the dimensions
+dim(my_matrix) # returns rows, columns in that order
+```
+#### length and class
+```{r}
+length(my_matrix)
+# what about the class?
+class(my_matrix)
+```
+
+#### indexing matrices
+
+```{r}
+# extract all items in the second row
+my_matrix[2,]
+# index a column
+my_matrix[,3]
+# index a given cell
+my_matrix[2.3]
+# index and replace a cell in your matrix
+my_matrix[8,3] <- 100
+# replace an entire row
+my_matrix[5,] <- 10
+```
+
+## control flow
+
+## `for` loops
+variable (counter), sequence, expressions
+
+```{r}
+for (i in 1:10) # variable and sequence
+  (print(i)) # expression
+```
+
+## generating random numbers
+
+```{r}
+rnorm(n = 5, mean = 10, sd = 2)
+```
+
+# let's combine everything we learned
+use `numeric` to create an empty vector
+use `for` to iterate along items of that empty vector
+use `[]` to access each slot and fill-in that empty vector
+use `rnorm` to sample values from a random normal distribution
+plot the trend
+
+$$N_{t}= N_{t-1} + r\left(1 - \frac{N_{t-1}}{K}\right)$$
+$$r \sim norm(\mu = 1.5, \sigma = 0.8)$$
+## writing the code down
+```{r}
+# set up model parameters
+K <- 100
+nsteps <- 100
+mu <- 1.5
+sigma <- 0.8
+# set up model objects
+N <- vector(mode = "numeric", length = nsteps)
+N[1] <- 25 
+# model it
+for(t in 2:nsteps) 
+{
+  r <- rnorm(n = 1, mean = mu, sd = sigma)
+  N[t] <- N[t-1] + r * (1- (N[t-1] /K))
+}
+
+# visualize it
+plot(N)
+```
+
+## Something more 
+create a matrix with 100 rows and 100 columns
+
+```{r}
+# set up model parameters
+K <- 100
+nsteps <- 100
+mu <- 0.4
+sigma <- 1
+# set up model objects
+N <- matrix(data = NA, nrow = nsteps, ncol = 100) # modify this to use a matrix instead of a vector
+N[1,] <- 25 
+# model it
+for(t in 2:nsteps) 
+{
+  r <- rnorm(n = 100, mean = mu, sd = sigma)
+  N[t,] <- N[t-1,] + r * (1- (N[t-1,] /K))
+}
+
+# visualize it
+matplot(N, type = "l")
+```
+## Bring in your friends!
+
+```{r}
+library(tidyverse)
+
+# create a data frame
+my_data <- as_tibble(N) %>% 
+  mutate(time = 1:nsteps) %>% 
+  gather(run, N, -time)
+
+# visualize it 
+ggplot(data = my_data, mapping = aes(x = time, y = N)) +
+  geom_line(aes(group = run), size = 0.1, alpha = 0.5) +
+  stat_summary(geom = "line", fun = mean, color = "red", size = 1.5) +
+  theme_bw() +
+  labs(x = "Time (years)", y = "Population size (N)")
+```
+
+## Overview
+
+In Part 2, we'll do an introduction to chi-square test for independence in R using lizard tail breakage data recorded at Jornada Basin Long Term Ecological Research site. 
+
+**Data from:** Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e (Accessed 2020-07-23).
+
+The data are in data/lizards.csv of this project. 
+
+## Getting started
+
+- Add your own new .Rmd to the src/ folder for Part 2 to follow along on your own (note that the instructor key is also included in src/ - but you should be typing this out on your own for improved learning and retention!)
+
+- Complete the following to practice the tools & concepts covered in Week 9 lectures (chi-square)
+
+## Step 2. Attach required packages
+
+For this part, you'll need:
+
+- `tidyverse`
+- `here`
+- `janitor`
+- `broom`
+
+```{r setup, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+```
+
+## Step 3. Get data & take a look
+
+Read in the lizards.csv data and take a look (using `View(lizards)` in the Console) to familiarize yourself with the data structure: 
+```{r}
+lizards <- read_csv(here("data","lizards.csv"))
+```
+
+And for fun, let's find the counts of each lizard species in the data: 
+```{r}
+lizards %>% 
+  count(spp) %>% 
+  arrange(-n)
+```
+
+The most commonly observed lizard here (UTST) is *Uta stansburiana*, or commonly the side-blotched lizard. We'll continue by exploring just that lizard. 
+
+## Make a subset
+
+Make a subset from `lizards` that only contains observations for: 
+ 
+- side-blotched lizards (UTST)
+- at sites "IBPE" (enclosure grassland site), "RABB" (rabbit mesquite site), and "EAST" (east tarbush site)
+- where the tail condition is recorded as either "W" (whole) or "B" (broken)
+
+```{r}
+utst <- lizards %>% 
+  filter(spp == "UTST") %>% 
+  filter(site %in% c("IBPE","RABB","EAST")) %>% 
+  filter(tail %in% c("B","W"))
+```
+
+## Find counts & proportions, put in a table
+
+The `janitor::tabyl()` function gets this pretty close to contingency table format...
+
+```{r}
+tail_counts <- utst %>% 
+  janitor::tabyl(site, tail)
+
+# And you can get a table with both counts & proportions! 
+tail_proportions <- tail_counts %>% 
+  adorn_percentages() %>% 
+  janitor::adorn_pct_formatting(digits = 2) %>% 
+  adorn_ns()
+```
+
+## Make contingency table and run chi-square
+
+First, we see that the site is its own variable - when we run chi-square, we really only want the counts in the table. 
+
+We can use `column_to_rownames` to convert entries in a column to stored rownames: 
+
+```{r}
+lizard_ct <- tail_counts %>% 
+  column_to_rownames(var = "site")
+```
+
+**Now** this is in shape to run chi-square. 
+
+What are we asking? Are site and tail breakage independent? In other words: is there a significant association between site and tail breakage? 
+```{r}
+lizard_x2 <- chisq.test(lizard_ct)
+lizard_x2
+
+lizard_tidy <- tidy(lizard_x2)
+```
+There is a significant association between site and lizard tail breakage ($\chi$^2^(`r lizard_tidy$parameter`) = `r round(lizard_tidy$statistic,2)`, *p* = `r round(lizard_tidy$p.value, 3)`). 
+
+Remember: you'd also want to report the actual counts and proportions in each group! 
+
+## END Part 2
+
+# LAB 10
+
+## Get started:
+
+- Create an R Project without version control (i.e. just through RStudio)
+- Create a new R Markdown document
+- Attach the following packages (you'll probably need to install a number of these)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(usethis)
+library(beepr) # Install
+library(praise) # Install
+library(cowsay) # Install
+library(paletteer) # Install
+library(sf) # Install
+library(janitor)
+```
+
+## `beepr::beep()` to let you know when your code is done running
+
+- Try it on it's own in the Console: `beep()`
+
+- See the different options with `?beep()`
+
+- Its real value: when you have code (simulations, model, etc.) that takes a while to run, you may want to do something else in the meantime. This way you get an alert when your code is done running. 
+
+Let's write a little loop that'll take a bit of time (we'll run the whole chunk - the beep won't happy until after the for loop finishes).  
+
+(Note: probably `eval = FALSE` this code chunk before knitting)!
+
+```{r, eval = FALSE}
+
+for (i in rev(seq(1:999))) (
+  print(paste(i, "bottles of beer on the wall"))
+) 
+
+beepr::beep(5)
+```
+
+Up it to 9,999 bottles to start, and try again with a different beep! 
+
+## `praise::praise()` to give yourself a boost
+
+Use the `praise::praise()` function to say something nice! 
+
+- Just by itself it's pretty cool. Try it out in the Console! `praise::praise()`.
+
+- But you can also add customization. See the different types of grammatical bits you can add: https://github.com/rladies/praise
+
+For example: 
+
+```{r}
+praise::praise("${EXCLAMATION}-n-${EXCLAMATION}! This code works ${adverb_manner}!")
+```
+
+Or:
+
+```{r}
+praise::praise("Holy ${creating}, Batman - this code is ${adjective}!")
+```
+
+## `cowsay::say()` to have a character say something
+
+Use the `cowsay::say()` function to create an ASCII character that says something for you. 
+
+See `?say` to see what characters exist. For example: `say("Hello", by = "shark")`
+
+Or even better...combine it with praise! 
+
+```{r}
+say(praise("This is ${ADJECTIVE}!!!"), by = "pig")
+```
+
+
+Try some different fun combinations. 
+
+## usethis for everything
+
+### Creating a version controlled R Project
+
+So far, we've created version-controlled projects using the "repo first, then clone to make an R Project" workflow. Now, let's learn how we can start from a non-version controlled R Project (i.e. an "R Project first workflow"). 
+
+### Reminder: changing from `master` to `main`
+
+- Go to your GitHub repo
+- Click on branches
+- Click editing pencil to right of `master`
+- Rename
+- Copy the git commands to your clipboard
+- Go back to RStudio
+- Paste those into the TERMINAL, press Enter to run
+- Now the default in both places is `main`
+
+### Editing your R Profile
+
+Go to your R Profile by running `usethis::edit_r_profile()` in the Console. This should bring up your `.Rprofile` file. 
+
+Add a line that contains the following: 
+
+`praise::praise()`
+
+Save your .Rprofile, then restart R (Session > Restart R). Notice that a nice message now shows up every time you restart R. 
+
+Now, let's add a nice character to send us that message instead, for example: 
+
+`cowsay::say(praise::praise(), by = "trilobite")`.
+
+## paletteer for a universe of color palettes
+
+There are *thousands* of color palettes that other people have created in R. The `paletteer` package by Emil Hvitfeldt puts them together in one place. 
+
+- Learn more: https://github.com/EmilHvitfeldt/paletteer
+
+- Or see the interactive color palette picker: https://emilhvitfeldt.github.io/r-color-palettes/
+
+Let's check out some of the discrete color palettes with `View(palettes_d_names)`. Now, let's make a little graph and fill columns using an existing palette. 
+
+We'll use the `storms` data (in `dplyr`)
+
+```{r}
+
+storms %>% 
+  group_by(name) %>% 
+  summarize(min_pressure = min(pressure, na.rm = TRUE)) %>% 
+  slice_min(n = 10, min_pressure) %>% 
+  ggplot(aes(y = name, x = min_pressure)) +
+  geom_col(aes(fill = name)) +
+  scale_fill_paletteer_d(palette = "ggprism::floral")
+
+```
+Go ahead & play around with different built-in palettes! 
+
+## sf + ggplot: maps in R 
+
+We've been using flat files (CSVs -- but there a functions to read in all kinds of files like Excel files, text, delimited, and much more!). Let's read in a .kml file (`doc.kml` - you can download this from GauchoSpace). 
+
+**Source:** Jornada Basin LTER Spatial Data: Dominant Vegetation of the JER and CDRRC in 1998 (Download KMZ 3972 KB) Dominant and subdominant vegetation on the Jornada Experimental Range and Chihuahuan Desert Rangeland Research Center in 1998. Published in Gibbens, R. P., McNeely, R. P., Havstad, K. M., Beck, R. F., & Nolen, B. (2005). Vegetation changes in the Jornada Basin from 1858 to 1998. Journal of Arid Environments, 61(4), 651-668.
+
+```{r}
+jornada_veg <- read_sf("doc.kml") %>% dplyr::select(Name) %>% 
+  clean_names()
+
+ggplot() +
+  geom_sf(data = jornada_veg, 
+          aes(fill = name),
+          color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::manyeys") +
+  labs(x = "Longitude",
+       y = "Latitude",
+       fill = "Dominant vegetation:",
+       title = "Jornada Basin vegetation",
+       caption = "Data source: Jornada Basin LTER") +
+  theme(legend.position = "right",
+        plot.title.position = "plot",
+        plot.caption.position = "plot",
+        plot.caption = element_text(face = "italic", color = "gray30"),
+        axis.text = element_text(size = 5))
+```
+## And export your map: 
+
+```{r, eval = FALSE}
+ggsave(filename = "my_awesome_map.png", width = 6, height = 4)
+```
+
+## tmap (if time)
+
+- You may need to install `tmap` and `terra`
